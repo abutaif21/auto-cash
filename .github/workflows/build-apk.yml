@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
 
       - name: Setup Java JDK 17
         uses: actions/setup-java@v4
@@ -28,34 +28,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Ensure Package & Config Files
+      - name: Install Dependencies with Force
         run: |
-          if [ ! -f "package.json" ]; then
-            echo '{
-              "name": "auto-cash-app",
-              "version": "2.0.0",
-              "main": "index.html",
-              "dependencies": {
-                "@capacitor/core": "^6.0.0",
-                "@capacitor/android": "^6.0.0",
-                "@capacitor/app": "^6.0.0"
-              },
-              "devDependencies": {
-                "@capacitor/cli": "^6.0.0"
-              }
-            }' > package.json
-          fi
-
-          if [ ! -f "capacitor.config.json" ]; then
-            echo '{
-              "appId": "com.autocash.management",
-              "appName": "Auto Cash",
-              "webDir": ".",
-              "server": { "androidScheme": "https" }
-            }' > capacitor.config.json
-          fi
-
-          npm install --legacy-peer-deps || npm install
+          npm install --legacy-peer-deps || npm install --force
 
       - name: Initialize Capacitor Android
         run: |
