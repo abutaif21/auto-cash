@@ -28,7 +28,7 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Dependencies with Force
+      - name: Install Dependencies Safely
         run: |
           npm install --legacy-peer-deps || npm install --force
 
