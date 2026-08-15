@@ -1,0 +1,14 @@
+{
+  "appId": "com.autocash.management",
+  "appName": "Auto Cash",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  }
+}

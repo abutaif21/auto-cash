@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Auto Cash | أوتوكاش</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./assets/icons/icon.png">
+  <link rel="apple-touch-icon" href="./assets/icons/icon.png">
+  <link rel="mask-icon" href="./assets/icons/icon.png" color="#10B981">
+  
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Auto Cash">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #10B981;
+      --primary-dark: #059669;
+      --primary-light: #ECFDF5;
+      --bg-main: #F8FAFC;
+      --surface: #FFFFFF;
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+      --danger: #EF4444;
+      --danger-light: #FEF2F2;
+      --warning: #F59E0B;
+      --warning-light: #FFFBEB;
+      --info: #3B82F6;
+      --info-light: #EFF6FF;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08);
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', system-ui, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    input, select, textarea {
+      direction: rtl;
+      text-align: right;
+      font-family: 'Cairo', system-ui, sans-serif;
+    }
+
+    input.pin-field {
+      direction: ltr !important;
+      text-align: center !important;
+      letter-spacing: 6px;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* شاشة القفل */
+    #auth-screen {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
+      color: white;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 16px;
+    }
+
+    .app-badge {
+      width: 56px;
+      height: 56px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 2px solid rgba(16, 185, 129, 0.4);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 8px auto;
+      color: var(--primary);
+    }
+
+    .pin-dots {
+      display: flex;
+      gap: 16px;
+      margin: 12px 0 6px 0;
+      justify-content: center;
+    }
+
+    .pin-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.2s;
+    }
+
+    .pin-dot.filled {
+      background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 12px var(--primary);
+      transform: scale(1.15);
+    }
+
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: 260px;
+      margin-bottom: 6px;
+    }
+
+    .key-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: white;
+      font-size: 22px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      margin: 0 auto;
+    }
+
+    .key-btn:active {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(0.92);
+    }
+
+    /* لوحة النمط في شاشة القفل */
+    #pattern-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #pattern-canvas {
+      touch-action: none;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .auth-toggle-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #cbd5e1;
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* تبويبات نافذة البروفايل */
+    .profile-tabs-header {
+      display: flex;
+      background: var(--bg-main);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .profile-tab-btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text-muted);
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .profile-tab-btn.active {
+      background: var(--surface);
+      color: var(--primary-dark);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* التطبيق الرئيسي */
+    #main-app {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+      width: 100%;
+    }
+
+    .app-topbar {
+      background: var(--surface);
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .app-topbar h1 { font-size: 18px; font-weight: 800; }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .topbar-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 8px;
+      height: 8px;
+      background: var(--danger);
+      border-radius: 50%;
+      display: none;
+    }
+
+    #app-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      padding-bottom: 120px;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 68px;
+      background: var(--surface);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+      z-index: 100;
+    }
+
+    .nav-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .nav-tab.active { color: var(--primary); }
+
+    .nav-center-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+      cursor: pointer;
+      transform: translateY(-16px);
+      border: 4px solid var(--surface);
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+
+    /* النوافذ العائمة */
+    #sidebar-drawer, #notification-modal, #custom-dialog-modal, #custom-alert-modal, #close-period-modal, #archive-view-modal, #onboarding-modal, #recovery-modal, #edit-tx-modal, #edit-car-modal, #date-picker-modal, #user-profile-modal, #setup-pattern-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-box {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 20px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: var(--shadow-lg);
+      animation: popIn 0.2s ease;
+      max-height: 88vh;
+      overflow-y: auto;
+    }
+
+    .drawer-content {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 280px;
+      background: var(--surface);
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      animation: slideRight 0.25s ease;
+    }
+
+    #toast-container {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+      width: 90%;
+      max-width: 340px;
+    }
+
+    .toast-msg {
+      background: #0f172a;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* خيارات إقفال الحساب */
+    .closure-option-btn {
+      width: 100%;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 12px;
+      text-align: right;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: all 0.2s ease;
+      margin-bottom: 10px;
+    }
+    .closure-option-btn:hover, .closure-option-btn:active {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    @keyframes popIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+    @keyframes slideRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  </style>
+</head>
+<body>
+  <div id="toast-container"></div>
+
+  <div id="custom-alert-modal">
+    <div class="modal-box" style="text-align: center;">
+      <div id="alert-icon-box" style="width: 52px; height: 52px; border-radius: 50%; background: var(--warning-light); color: var(--warning); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto;">
+        <i data-lucide="alert-circle" style="width: 28px; height: 28px;"></i>
+      </div>
+      <h3 id="alert-title" style="font-size: 16px; font-weight: 800; margin-bottom: 6px;">تنبيه</h3>
+      <p id="alert-message" style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px; line-height: 1.5;"></p>
+      <button id="alert-close-btn" style="width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer;">حسناً، فهمت</button>
+    </div>
+  </div>
+
+  <div id="close-period-modal">
+    <div class="modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+        <h3 style="font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="lock" style="width: 18px; color: var(--warning);"></i> إقفال الحساب المالي
+        </h3>
+        <button id="close-period-modal-x" style="background: none; border: none; color: var(--text-muted); cursor: pointer;"><i data-lucide="x"></i></button>
+      </div>
+
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 12px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+          تسمية الدورة / الفترة (اختياري):
+        </label>
+        <input type="text" id="closure-period-name-input" placeholder="مثال: حساب شهر محرم / النصف الأول..." style="width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; background: white;">
+      </div>
+
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
+        اختر الإجراء المناسب للتعامل مع صافي الفائض المالي للفترة الحالية (<b id="closure-surplus-amount" style="color: var(--primary-dark);">0 ريال</b>):
+      </p>
+
+      <button id="closure-carry-over-btn" class="closure-option-btn">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 13px; font-weight: 800; color: var(--text-main);">1. إقفال مع ترحيل الفائض</span>
+          <i data-lucide="arrow-left-right" style="width: 16px; color: var(--primary);"></i>
+        </div>
+        <span style="font-size: 11px; color: var(--text-muted);">ترحيل المبلغ ليصبح رصيد بداية للفترة القادمة تلقائياً.</span>
+      </button>
+
+      <button id="closure-settle-zero-btn" class="closure-option-btn">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 13px; font-weight: 800; color: var(--danger);">2. إقفال مع التسوية (تصفير)</span>
+          <i data-lucide="check-check" style="width: 16px; color: var(--danger);"></i>
+        </div>
+        <span style="font-size: 11px; color: var(--text-muted);">سحب وتصفية الفائض لتبدأ الفترة القادمة برصيد صفري تماماً.</span>
+      </button>
+
+      <button id="closure-cancel-btn" style="width: 100%; background: var(--border); color: var(--text-main); border: none; padding: 10px; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer; margin-top: 6px;">إلغاء</button>
+    </div>
+  </div>
+
+  <div id="archive-view-modal">
+    <div class="modal-box" style="max-width: 480px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+        <h3 id="archive-modal-title" style="font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="archive" style="width: 18px; color: var(--primary);"></i> تفاصيل الدورة المقفلة
+        </h3>
+        <button id="close-archive-modal-btn" style="background: none; border: none; color: var(--text-muted); cursor: pointer;"><i data-lucide="x"></i></button>
+      </div>
+
+      <div id="archive-modal-body" style="font-size: 13px; color: var(--text-main); margin-bottom: 16px;"></div>
+
+      <div style="display: flex; gap: 8px;">
+        <button id="print-archive-record-btn" style="flex: 1; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <i data-lucide="printer" style="width: 16px;"></i> طباعة كشف الدورة A4
+        </button>
+        <button id="dismiss-archive-modal-btn" style="flex: 1; background: var(--border); color: var(--text-main); border: none; padding: 10px; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer;">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="date-picker-modal">
+    <div class="modal-box">
+      <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 6px; text-align: center;" id="date-picker-title">تحديد التاريخ</h3>
+      <p style="font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 16px;">اختر اليوم والشهر والسنة</p>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px;">
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">اليوم</label>
+          <select id="dp-day" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; background: white; font-weight: 700;"></select>
+        </div>
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">الشهر</label>
+          <select id="dp-month" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; background: white; font-weight: 700;"></select>
+        </div>
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">السنة</label>
+          <select id="dp-year" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; background: white; font-weight: 700;"></select>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <button id="dp-apply-btn" style="flex: 1; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer;">تطبيق التاريخ</button>
+        <button id="dp-cancel-btn" style="flex: 1; background: var(--border); color: var(--text-main); padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer;">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="user-profile-modal">
+    <div class="modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+        <h3 style="font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="user-cog" style="width: 18px; color: var(--primary);"></i> إعدادات المستخدم والنظام
+        </h3>
+        <button id="close-user-profile-btn" style="background: none; border: none; color: var(--text-muted); cursor: pointer;"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="profile-tabs-header">
+        <button id="tab-security-btn" class="profile-tab-btn active">
+          <i data-lucide="shield-check" style="width: 14px;"></i> الحماية والأمان
+        </button>
+        <button id="tab-backup-btn" class="profile-tab-btn">
+          <i data-lucide="database" style="width: 14px;"></i> النسخ الاحتياطي
+        </button>
+      </div>
+
+      <div id="profile-tab-security-content">
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 10px 12px; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+            <span style="font-size: 12px; font-weight: 700; color: var(--text-main);">حالة النسخة:</span>
+            <span style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 800;">ترخيص دائم مفعّل</span>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted);">
+            رمز الجهاز: <span id="profile-license-device-id" style="font-family: monospace; color: #0284c7; font-weight: 700; letter-spacing: 1px;">-</span>
+          </div>
+        </div>
+
+        <div style="background: var(--primary-light); padding: 10px 12px; border-radius: 12px; border: 1px solid #a7f3d0; margin-bottom: 12px;">
+          <div style="font-size: 12px; font-weight: 700; margin-bottom: 4px; color: var(--primary-dark); display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="smartphone" style="width: 16px;"></i> تثبيت التطبيق على الشاشة الرئيسية
+          </div>
+          <p style="font-size: 11px; color: #047857; margin-bottom: 8px;">تثبيت أوتوكاش كأيقونة مستقلة سريعة على هاتفك</p>
+          <button id="profile-install-pwa-btn" style="width: 100%; background: var(--primary); color: white; border: none; padding: 8px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <i data-lucide="download" style="width: 14px;"></i> إضافة للشاشة الرئيسية
+          </button>
+        </div>
+
+        <div style="background: var(--bg-main); padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px;">
+          <label style="display: block; font-size: 12px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            <i data-lucide="hourglass" style="width: 14px; color: var(--primary); vertical-align: middle;"></i> مدة بقاء تسجيل الدخول (الجلسة):
+          </label>
+          <select id="profile-session-timeout" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; background: white; font-weight: 700;">
+            <option value="0">طلب الرمز عند كل فتح للتطبيق</option>
+            <option value="4">البقاء نشطاً لمدة 4 ساعات</option>
+            <option value="12">البقاء نشطاً لمدة 12 ساعة</option>
+            <option value="24">البقاء نشطاً لمدة يوم واحد (24 ساعة)</option>
+            <option value="72">البقاء نشطاً لمدة 3 أيام</option>
+            <option value="168">البقاء نشطاً لمدة أسبوع</option>
+          </select>
+        </div>
+
+        <div style="background: var(--bg-main); padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px;">
+          <div style="font-size: 12px; font-weight: 700; margin-bottom: 6px; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="grid" style="width: 16px; color: var(--primary);"></i> قفل النمط (Pattern Lock)
+          </div>
+          <button id="profile-setup-pattern-btn" style="width: 100%; background: var(--surface); color: var(--text-main); border: 1px solid var(--border); padding: 8px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <i data-lucide="lock" style="width: 14px; color: var(--primary);"></i> تسجيل / تحديث نمط القفل
+          </button>
+        </div>
+
+        <div style="background: var(--bg-main); padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px;">
+          <div style="font-size: 12px; font-weight: 700; margin-bottom: 6px; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="fingerprint" style="width: 16px; color: var(--primary);"></i> البصمة البيومترية
+          </div>
+          <button id="profile-toggle-biometrics-btn" style="width: 100%; background: var(--surface); color: var(--text-main); border: 1px solid var(--border); padding: 8px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <i data-lucide="scan-face" style="width: 14px; color: var(--info);"></i> تسجيل / ربط البصمة
+          </button>
+        </div>
+
+        <div style="margin-bottom: 12px;">
+          <div style="font-size: 12px; font-weight: 700; margin-bottom: 4px; color: var(--text-main);">تغيير رمز الدخول (PIN)</div>
+          <input type="password" id="profile-old-pin" class="pin-field" placeholder="الرمز الحالي" maxlength="4" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; font-size: 13px;">
+          <input type="password" id="profile-new-pin" class="pin-field" placeholder="الرمز الجديد (4 أرقام)" maxlength="4" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; font-size: 13px;">
+          <button id="profile-update-pin-btn" style="width: 100%; background: var(--warning); color: white; border: none; padding: 8px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">تحديث الرمز</button>
+        </div>
+
+        <div style="border-top: 1px solid var(--border); padding-top: 10px;">
+          <div style="font-size: 12px; font-weight: 700; margin-bottom: 4px; color: var(--text-main);">سؤال الأمان لاستعادة الرمز</div>
+          <select id="profile-sec-question" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; font-size: 12px; background: white;">
+            <option value="ما هو اسم سيارتك المفضلة؟">ما هو اسم سيارتك المفضلة؟</option>
+            <option value="ما هي مدينتك المفضلة؟">ما هي مدينتك المفضلة؟</option>
+            <option value="ما هو اسم صديق طفولتك؟">ما هو اسم صديق طفولتك؟</option>
+          </select>
+          <input type="text" id="profile-sec-answer" placeholder="اكتب الإجابة السرية الجديدة..." style="width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; font-size: 12px;">
+          <button id="profile-update-sec-btn" style="width: 100%; background: var(--info); color: white; border: none; padding: 8px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">حفظ سؤال الأمان</button>
+        </div>
+      </div>
+
+      <div id="profile-tab-backup-content" style="display: none;">
+        <div style="background: var(--bg-main); padding: 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <span style="font-size: 13px; font-weight: 800; color: var(--text-main);">تفعيل التصدير التلقائي:</span>
+            <input type="checkbox" id="profile-auto-backup-toggle" style="width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer;">
+          </div>
+
+          <button id="profile-choose-backup-dir-btn" style="width: 100%; background: var(--surface); color: var(--text-main); border: 1px dashed var(--primary); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px;">
+            <i data-lucide="folder-cog" style="width: 16px; color: var(--primary);"></i> تحديد مجلد الحفظ
+          </button>
+          <div id="profile-backup-dir-label" style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px; text-align: center;">لم يتم تحديد مجلد بعد</div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+            <div>
+              <label style="display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 2px;">مرات التكرار:</label>
+              <select id="profile-backup-frequency" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 11px; background: white; font-weight: 700;">
+                <option value="1">مرة يومياً</option>
+                <option value="2">مرتين يومياً</option>
+                <option value="3">3 مرات يومياً</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 2px;">وقت النسخ:</label>
+              <input type="time" id="profile-backup-time" value="20:00" style="width: 100%; padding: 7px 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 11px; background: white; font-weight: 700; text-align: center;">
+            </div>
+          </div>
+
+          <button id="profile-save-backup-cfg-btn" style="width: 100%; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">
+            حفظ إعدادات النسخ
+          </button>
+        </div>
+      </div>
+
+      <button id="profile-logout-btn" style="width: 100%; background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger); padding: 10px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <i data-lucide="log-out" style="width: 16px;"></i> تسجيل الخروج (قفل التطبيق)
+      </button>
+    </div>
+  </div>
+
+  <div id="setup-pattern-modal">
+    <div class="modal-box" style="text-align: center;">
+      <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 4px;">تعيين نمط القفل</h3>
+      <p id="setup-pattern-hint" style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">ارسم النمط بالوصل بين 4 نقاط على الأقل</p>
+      
+      <canvas id="setup-pattern-canvas" width="240" height="240" style="touch-action: none; background: var(--bg-main); border-radius: 16px; border: 1px solid var(--border); margin: 0 auto 14px auto; display: block;"></canvas>
+      
+      <div style="display: flex; gap: 8px;">
+        <button id="setup-pattern-cancel-btn" style="flex: 1; background: var(--border); color: var(--text-main); padding: 10px; border: none; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer;">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sidebar-drawer">
+    <div class="drawer-content">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid var(--border);">
+          <div style="font-size: 18px; font-weight: 800; color: var(--primary);">Auto Cash</div>
+          <button id="close-drawer-btn" style="background: none; border: none; color: var(--text-muted); cursor: pointer;"><i data-lucide="x"></i></button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <button id="drawer-install-pwa-btn" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; background: var(--primary-light); border: 1px solid #a7f3d0; border-radius: 10px; font-size: 14px; font-weight: 800; color: var(--primary-dark); text-align: right; cursor: pointer; margin-bottom: 6px;">
+            <i data-lucide="download" style="width: 20px; color: var(--primary-dark);"></i> إضافة للشاشة الرئيسية
+          </button>
+
+          <button class="drawer-nav-btn" data-view="dashboard" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; background: none; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; color: var(--text-main); text-align: right; cursor: pointer;">
+            <i data-lucide="layout-dashboard" style="width: 20px; color: var(--primary);"></i> لوحة التحكم
+          </button>
+          <button class="drawer-nav-btn" data-view="cars" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; background: none; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; color: var(--text-main); text-align: right; cursor: pointer;">
+            <i data-lucide="car" style="width: 20px; color: var(--primary);"></i> إدارة السيارات
+          </button>
+          <button class="drawer-nav-btn" data-view="transactions" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; background: none; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; color: var(--text-main); text-align: right; cursor: pointer;">
+            <i data-lucide="wallet" style="width: 20px; color: var(--primary);"></i> العمليات المالية
+          </button>
+          <button class="drawer-nav-btn" data-view="reports" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; background: none; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; color: var(--text-main); text-align: right; cursor: pointer;">
+            <i data-lucide="file-bar-chart-2" style="width: 20px; color: var(--primary);"></i> التقارير والكشف
+          </button>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid var(--border); padding-top: 14px; display: flex; flex-direction: column; gap: 10px;">
+        <button id="drawer-logout-btn" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger); border-radius: 10px; font-size: 14px; font-weight: 800; cursor: pointer;">
+          <i data-lucide="log-out" style="width: 18px;"></i> تسجيل الخروج (قفل التطبيق)
+        </button>
+        <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
+          نظام أوتوكاش المحلي الإصدار v2.0 (Offline PWA)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="notification-modal">
+    <div class="modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="font-size: 16px; font-weight: 800;">مركز التنبيهات</h3>
+        <button id="close-notifications-btn" style="background: none; border: none; color: var(--text-muted); cursor: pointer;"><i data-lucide="x"></i></button>
+      </div>
+      <div id="notifications-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow-y: auto;"></div>
+    </div>
+  </div>
+
+  <div id="onboarding-modal">
+    <div class="modal-box">
+      <div style="text-align: center; margin-bottom: 16px;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto;">
+          <i data-lucide="shield-plus"></i>
+        </div>
+        <h3 style="font-size: 17px; font-weight: 800;">إعداد الحماية لأول مرة</h3>
+        <p style="color: var(--text-muted); font-size: 12px; margin-top: 2px;">حدد رمز المرور وسؤال الأمان لاستعادته</p>
+      </div>
+
+      <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px;">رمز الدخول الجديد (4 أرقام):</label>
+      <input type="password" id="ob-pin" class="pin-field" maxlength="4" placeholder="••••" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; font-size: 18px;">
+
+      <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px;">تأكيد رمز الدخول:</label>
+      <input type="password" id="ob-confirm-pin" class="pin-field" maxlength="4" placeholder="••••" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; font-size: 18px;">
+
+      <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px;">سؤال الأمان:</label>
+      <select id="ob-question" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; font-size: 12px; background: white;">
+        <option value="ما هو اسم سيارتك المفضلة؟">ما هو اسم سيارتك المفضلة؟</option>
+        <option value="ما هي مدينتك المفضلة؟">ما هي مدينتك المفضلة؟</option>
+        <option value="ما هو اسم صديق طفولتك؟">ما هو اسم صديق طفولتك؟</option>
+      </select>
+
+      <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px;">إجابة سؤال الأمان:</label>
+      <input type="text" id="ob-answer" placeholder="اكتب الإجابة السرية..." style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px; font-size: 13px;">
+
+      <button id="ob-save-btn" style="width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 10px; font-weight: 800; font-size: 14px; cursor: pointer;">حفظ وتفعيل النظام</button>
+    </div>
+  </div>
+
+  <div id="recovery-modal">
+    <div class="modal-box">
+      <div style="text-align: center; margin-bottom: 14px;">
+        <h3 style="font-size: 16px; font-weight: 800; color: var(--warning);">استعادة رمز الدخول</h3>
+        <p style="color: var(--text-muted); font-size: 12px; margin-top: 2px;" id="recovery-question-label">أجب عن سؤال الأمان</p>
+      </div>
+
+      <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px;">إجابتك المسجلة:</label>
+      <input type="text" id="rec-answer" placeholder="اكتب الإجابة..." style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; font-size: 13px;">
+
+      <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px;">رمز الدخول الجديد (4 أرقام):</label>
+      <input type="password" id="rec-new-pin" class="pin-field" maxlength="4" placeholder="••••" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; font-size: 16px;">
+
+      <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px;">تأكيد الرمز الجديد:</label>
+      <input type="password" id="rec-confirm-new-pin" class="pin-field" maxlength="4" placeholder="••••" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px; font-size: 16px;">
+
+      <div style="display: flex; gap: 8px;">
+        <button id="rec-submit-btn" style="flex: 1; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer;">تحديث ودخول</button>
+        <button id="rec-cancel-btn" style="flex: 1; background: var(--border); color: var(--text-main); padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer;">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="custom-dialog-modal">
+    <div class="modal-box" style="text-align: center;">
+      <h3 id="dialog-title" style="font-size: 16px; font-weight: 800; margin-bottom: 6px;">تأكيد</h3>
+      <p id="dialog-message" style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">هل ترغب بالمتابعة؟</p>
+      <div style="display: flex; gap: 10px;">
+        <button id="dialog-confirm-btn" style="flex: 1; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer;">تأكيد</button>
+        <button id="dialog-cancel-btn" style="flex: 1; background: var(--border); color: var(--text-main); border: none; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer;">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="edit-tx-modal">
+    <div class="modal-box">
+      <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 12px;">تعديل العملية المالية</h3>
+      <input type="hidden" id="edit-tx-id">
+      
+      <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px;">النوع:</label>
+      <select id="edit-tx-type" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; font-size: 13px; background: white;">
+        <option value="دخل">دخل</option>
+        <option value="مصروف">مصروف</option>
+        <option value="سحب">سحب</option>
+      </select>
+
+      <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px;">التصنيف:</label>
+      <select id="edit-tx-subtype" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; font-size: 13px; background: white;">
+        <option value="عام">عام</option>
+        <option value="بنزين">بنزين</option>
+        <option value="مصروف يومي">مصروف يومي</option>
+        <option value="سيارات">دخل سيارات</option>
+      </select>
+
+      <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px;">المبلغ (ريال):</label>
+      <input type="number" id="edit-tx-amount" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; font-size: 14px; font-weight: 700;">
+
+      <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px;">ملاحظة:</label>
+      <input type="text" id="edit-tx-note" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px; font-size: 13px;">
+
+      <div style="display: flex; gap: 8px;">
+        <button id="save-edit-tx-btn" style="flex: 1; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer;">حفظ التعديل</button>
+        <button id="cancel-edit-tx-btn" style="flex: 1; background: var(--border); color: var(--text-main); padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer;">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="edit-car-modal">
+    <div class="modal-box">
+      <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 12px;">تعديل بيانات السيارة</h3>
+      <input type="hidden" id="edit-car-id">
+
+      <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px;">نوع السيارة:</label>
+      <input type="text" id="edit-car-type" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; font-size: 13px;">
+
+      <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px;">رقم اللوحة:</label>
+      <input type="text" id="edit-car-plate" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; font-size: 13px;">
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
+        <div>
+          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px;">المربع:</label>
+          <input type="number" id="edit-car-box" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px;">
+        </div>
+        <div>
+          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px;">المبلغ (ريال):</label>
+          <input type="number" id="edit-car-price" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px;">
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <button id="save-edit-car-btn" style="flex: 1; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer;">حفظ التعديل</button>
+        <button id="cancel-edit-car-btn" style="flex: 1; background: var(--border); color: var(--text-main); padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer;">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="auth-screen">
+    <div style="text-align: center; margin-top: 10px;">
+      <div class="app-badge">
+        <i data-lucide="shield-check" style="width: 32px; height: 32px;"></i>
+      </div>
+      <h2 id="auth-screen-title" style="font-size: 18px; font-weight: 800;">تسجيل الدخول</h2>
+      <p id="auth-screen-subtitle" style="color: #94a3b8; font-size: 12px; margin-top: 2px;">أدخل رمز المرور السري</p>
+      
+      <div id="pin-dots-container" class="pin-dots">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+      </div>
+    </div>
+
+    <div id="pin-keypad-container">
+      <div class="keypad-grid">
+        <button class="key-btn" data-key="1">1</button>
+        <button class="key-btn" data-key="2">2</button>
+        <button class="key-btn" data-key="3">3</button>
+        <button class="key-btn" data-key="4">4</button>
+        <button class="key-btn" data-key="5">5</button>
+        <button class="key-btn" data-key="6">6</button>
+        <button class="key-btn" data-key="7">7</button>
+        <button class="key-btn" data-key="8">8</button>
+        <button class="key-btn" data-key="9">9</button>
+        <button class="key-btn" id="key-clear" style="font-size: 12px; color: #94a3b8;">مسح</button>
+        <button class="key-btn" data-key="0">0</button>
+        <button class="key-btn" id="key-backspace"><i data-lucide="delete" style="width: 18px;"></i></button>
+      </div>
+    </div>
+
+    <div id="pattern-container">
+      <canvas id="pattern-canvas" width="260" height="260"></canvas>
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 270px;">
+      <div style="display: flex; gap: 8px; justify-content: center; width: 100%;">
+        <button id="toggle-auth-mode-btn" class="auth-toggle-btn">
+          <i data-lucide="grid" style="width: 14px;"></i> <span id="toggle-auth-mode-label">التبديل إلى النمط</span>
+        </button>
+        <button id="biometric-login-btn" class="auth-toggle-btn" style="display: none; border-color: var(--primary); color: var(--primary);">
+          <i data-lucide="fingerprint" style="width: 14px;"></i> البصمة
+        </button>
+      </div>
+
+      <button id="forgot-pin-btn" style="background: none; border: none; color: var(--primary); font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: underline; margin-top: 4px;">نسيت رمز المرور؟</button>
+    </div>
+  </div>
+
+  <div id="main-app">
+    <header class="app-topbar">
+      <button class="topbar-btn" id="open-drawer-btn"><i data-lucide="menu"></i></button>
+      <h1 id="topbar-title">الرئيسية</h1>
+      
+      <div class="topbar-actions">
+        <button class="topbar-btn" id="open-notifications-btn">
+          <i data-lucide="bell"></i>
+          <div class="notification-badge" id="nav-notif-dot"></div>
+        </button>
+        <button class="topbar-btn" id="open-user-profile-btn">
+          <i data-lucide="user-cog"></i>
+        </button>
+      </div>
+    </header>
+
+    <main id="app-content"></main>
+
+    <nav class="bottom-nav">
+      <div class="nav-tab active" data-view="dashboard">
+        <i data-lucide="home"></i>
+        <span>الرئيسية</span>
+      </div>
+      <div class="nav-tab" data-view="cars">
+        <i data-lucide="car"></i>
+        <span>السيارات</span>
+      </div>
+      
+      <div class="nav-center-btn" id="quick-action-btn">
+        <i data-lucide="plus" style="width: 28px; height: 28px;"></i>
+      </div>
+
+      <div class="nav-tab" data-view="transactions">
+        <i data-lucide="wallet"></i>
+        <span>الكاش</span>
+      </div>
+      <div class="nav-tab" data-view="reports">
+        <i data-lucide="file-text"></i>
+        <span>الكشف والتقارير</span>
+      </div>
+    </nav>
+  </div>
+
+  <script src="js/libs/dexie.min.js"></script>
+  <script src="js/libs/lucide.min.js"></script>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Auto Cash | أوتوكاش</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./assets/icons/icon.png">
+  <link rel="apple-touch-icon" href="./assets/icons/icon.png">
+  <link rel="mask-icon" href="./assets/icons/icon.png" color="#10B981">
+  
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Auto Cash">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #10B981;
+      --primary-dark: #059669;
+      --primary-light: #ECFDF5;
+      --bg-main: #F8FAFC;
+      --surface: #FFFFFF;
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+      --danger: #EF4444;
+      --danger-light: #FEF2F2;
+      --warning: #F59E0B;
+      --warning-light: #FFFBEB;
+      --info: #3B82F6;
+      --info-light: #EFF6FF;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08);
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', system-ui, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    input, select, textarea {
+      direction: rtl;
+      text-align: right;
+      font-family: 'Cairo', system-ui, sans-serif;
+    }
+
+    input.pin-field {
+      direction: ltr !important;
+      text-align: center !important;
+      letter-spacing: 6px;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* شاشة القفل */
+    #auth-screen {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
+      color: white;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 16px;
+    }
+
+    .app-badge {
+      width: 56px;
+      height: 56px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 2px solid rgba(16, 185, 129, 0.4);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 8px auto;
+      color: var(--primary);
+    }
+
+    .pin-dots {
+      display: flex;
+      gap: 16px;
+      margin: 12px 0 6px 0;
+      justify-content: center;
+    }
+
+    .pin-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.2s;
+    }
+
+    .pin-dot.filled {
+      background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 12px var(--primary);
+      transform: scale(1.15);
+    }
+
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: 260px;
+      margin-bottom: 6px;
+    }
+
+    .key-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: white;
+      font-size: 22px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      margin: 0 auto;
+    }
+
+    .key-btn:active {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(0.92);
+    }
+
+    /* لوحة النمط في شاشة القفل */
+    #pattern-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #pattern-canvas {
+      touch-action: none;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .auth-toggle-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #cbd5e1;
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* تبويبات نافذة البروفايل */
+    .profile-tabs-header {
+      display: flex;
+      background: var(--bg-main);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .profile-tab-btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text-muted);
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .profile-tab-btn.active {
+      background: var(--surface);
+      color: var(--primary-dark);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* التطبيق الرئيسي */
+    #main-app {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+      width: 100%;
+    }
+
+    .app-topbar {
+      background: var(--surface);
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .app-topbar h1 { font-size: 18px; font-weight: 800; }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .topbar-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 8px;
+      height: 8px;
+      background: var(--danger);
+      border-radius: 50%;
+      display: none;
+    }
+
+    #app-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      padding-bottom: 120px;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 68px;
+      background: var(--surface);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+      z-index: 100;
+    }
+
+    .nav-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .nav-tab.active { color: var(--primary); }
+
+    .nav-center-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+      cursor: pointer;
+      transform: translateY(-16px);
+      border: 4px solid var(--surface);
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+
+    /* النوافذ العائمة */
+    #sidebar-drawer, #notification-modal, #custom-dialog-modal, #custom-alert-modal, #close-period-modal, #archive-view-modal, #onboarding-modal, #recovery-modal, #edit-tx-modal, #edit-car-modal, #date-picker-modal, #user-profile-modal, #setup-pattern-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-box {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 20px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: var(--shadow-lg);
+      animation: popIn 0.2s ease;
+      max-height: 88vh;
+      overflow-y: auto;
+    }
+
+    .drawer-content {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 280px;
+      background: var(--surface);
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      animation: slideRight 0.25s ease;
+    }
+
+    #toast-container {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+      width: 90%;
+      max-width: 340px;
+    }
+
+    .toast-msg {
+      background: #0f172a;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* ========================================================
+       📊 تنسيقات التقارير المالية واليومية المتقدمة
+       ======================================================== */
+    .financial-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .sum-box {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sum-title { font-size: 11px; font-weight: 700; color: #475569; }
+    .sum-val { font-size: 16px; font-weight: 800; }
+
+    .bg-slate { background: #f8fafc; }
+    .bg-emerald { background: #ecfdf5; border-color: #a7f3d0; }
+    .bg-rose { background: #fff1f2; border-color: #fecdd3; }
+    .bg-blue { background: #eff6ff; border-color: #bfdbfe; }
+
+    .text-primary { color: var(--primary-dark); }
+    .text-emerald { color: #047857; }
+    .text-danger { color: #b91c1c; }
+    .text-blue { color: #1d4ed8; }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+
+    .report-table th {
+      background: #f1f5f9;
+      padding: 10px;
+      text-align: right;
+      font-weight: 800;
+      color: #334155;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .report-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .report-table tfoot td {
+      background: #f8fafc;
+      border-top: 1px solid var(--border);
+      padding: 10px;
+    }
+
+    .status-tag {
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .tag-done { background: #ecfdf5; color: #047857; }
+    .tag-warn { background: #fffbeb; color: #b45309; }
+    .tag-danger { background: #fef2f2; color: #b91c1c; }
+
+    .footer-breakdown-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .breakdown-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .breakdown-header {
+      font-size: 12px;
+      font-weight: 800;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+      color: #1e293b;
+    }
+
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding: 3px 0;
+      color: #475569;
+    }
+
+    .breakdown-total {
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px dashed var(--border);
+      padding-top: 6px;
+      margin-top: 6px;
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 10px;
+    }
+
+    .report-signatures {
+      display: none;
+    }
+
+    /* خيارات إقفال الحساب */
+    .closure-option-btn {
+      width: 100%;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 12px;
+      text-align: right;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: all 0.2s ease;
+      margin-bottom: 10px;
+    }
+    .closure-option-btn:hover, .closure-option-btn:active {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    /* ========================================================
+       🖨️ إعدادات الطباعة الرسمية بحجم صفحة A4 
+       ======================================================== */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 12mm;
+      }
+
+      body {
+        background: white !important;
+        color: black !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
+
+      .no-print,
+      .app-topbar,
+      .bottom-nav,
+      #toast-container,
+      #sidebar-drawer,
+      #notification-modal,
+      #close-period-modal,
+      #archive-view-modal,
+      #custom-alert-modal,
+      #setup-pattern-modal,
+      #user-profile-modal {
+        display: none !important;
+      }
+
+      #app-content {
+        padding: 0 !important;
+        overflow: visible !important;
+      }
+
+      .print-page {
+        width: 100% !important;
+        background: white !important;
+      }
+
+      .report-table {
+        border: 1px solid #000 !important;
+      }
+
+      .report-table th, .report-table td {
+        border: 1px solid #cbd5e1 !important;
+      }
+
+      .financial-summary-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+      }
+
+      .report-signatures {
+        display: flex !important;
+        justify-content: space-around;
+        margin-top: 40px;
+        padding-top: 20px;
+      }
+
+      .signature-line {
+        width: 180px;
+        border-bottom: 1px dashed #000;
+        margin-top: 35px;
+      }
+    }
+
+    @keyframes popIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+    @keyframes slideRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  </style>
+</head>

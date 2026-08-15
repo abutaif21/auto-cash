@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Tow truck and car app icon</title>
+  <desc id="desc">Purple tow truck carrying a turquoise car over a subtle street map.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f5f7fb"/>
+    </linearGradient>
+    <linearGradient id="purple" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7a24c8"/>
+      <stop offset="1" stop-color="#4d168e"/>
+    </linearGradient>
+    <linearGradient id="car" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#45d6b1"/>
+      <stop offset="1" stop-color="#25bda0"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#4d5570" flood-opacity=".18"/>
+    </filter>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+    <clipPath id="mapClip">
+      <rect x="190" y="190" width="644" height="644" rx="118"/>
+    </clipPath>
+  </defs>
+
+  <!-- App tile -->
+  <rect x="190" y="190" width="644" height="644" rx="118"
+        fill="url(#bg)" stroke="#d9dce6" stroke-width="5" filter="url(#shadow)"/>
+
+  <!-- Subtle map -->
+  <g clip-path="url(#mapClip)" fill="none" stroke-linecap="round">
+    <g stroke="#dfe3ea" stroke-width="4" opacity=".72">
+      <path d="M240 330H425V240"/>
+      <path d="M445 240V330H565V240"/>
+      <path d="M585 240V330H810"/>
+      <path d="M240 370H390V505H240"/>
+      <path d="M420 370H545V505H420"/>
+      <path d="M575 370H810V505H575"/>
+      <path d="M240 545H360L475 660H650V545H810"/>
+      <path d="M240 710H390V810"/>
+      <path d="M420 810V685H555"/>
+      <path d="M595 685H810V810"/>
+      <path d="M665 220V810"/>
+    </g>
+    <g stroke="#e7e9ef" stroke-width="3" stroke-dasharray="18 18" opacity=".8">
+      <path d="M275 210V395L390 510V810"/>
+      <path d="M515 210V345L405 455"/>
+      <path d="M710 210V350L610 450V810"/>
+      <path d="M210 585H360L485 710"/>
+    </g>
+    <g stroke="#d6dbe4" stroke-width="3" opacity=".5">
+      <path d="M225 475L355 605"/>
+      <path d="M350 230L790 670"/>
+      <path d="M760 225L330 795"/>
+    </g>
+  </g>
+
+  <!-- Ground shadow -->
+  <ellipse cx="513" cy="566" rx="284" ry="34" fill="#6b7182" opacity=".12" filter="url(#soft)"/>
+
+  <!-- Tow truck -->
+  <g stroke="#43147d" stroke-width="12" stroke-linejoin="round" stroke-linecap="round">
+    <!-- bed -->
+    <path d="M238 526 L392 526 L414 490 L604 490 L604 526 L700 526
+             L700 566 L238 566 Z" fill="url(#purple)"/>
+    <!-- rear ramp -->
+    <path d="M238 526 L392 526 L365 566 L238 566 Z" fill="#6d20b5"/>
+    <!-- vertical support -->
+    <path d="M604 490 L623 330 L654 330 L654 526 L604 526 Z" fill="url(#purple)"/>
+    <!-- cab -->
+    <path d="M654 526 L654 340 Q654 330 666 330 L754 330
+             Q775 330 786 351 L805 393 L805 526 Z" fill="url(#purple)"/>
+    <!-- windshield -->
+    <path d="M686 354 L746 354 Q756 354 763 366 L778 398 L686 398 Z"
+          fill="#f7f5fb" stroke-width="9"/>
+    <!-- cab window -->
+    <path d="M692 414 H780 V492 H692 Z" fill="#f7f5fb" stroke-width="9"/>
+    <!-- bed top -->
+    <path d="M392 526 H604" fill="none" stroke-width="15"/>
+  </g>
+
+  <!-- Car -->
+  <g stroke="#492083" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+    <!-- body -->
+    <path d="M244 438
+             Q252 404 289 392
+             L365 367
+             Q421 349 475 364
+             L545 390
+             Q574 401 588 426
+             L590 458
+             Q590 474 570 480
+             L278 480
+             Q247 478 244 460 Z"
+          fill="url(#car)"/>
+    <!-- windows -->
+    <path d="M326 391 Q366 370 409 368 Q442 367 474 376 L511 390
+             L525 418 H319 Z" fill="#eef8f6"/>
+    <path d="M325 391 L319 418 H405 V371 Q362 373 325 391 Z"
+          fill="#e9f7f4" stroke-width="7"/>
+    <path d="M415 371 Q447 373 472 380 L510 390 L523 418 H415 Z"
+          fill="#e9f7f4" stroke-width="7"/>
+    <!-- bumpers/details -->
+    <path d="M250 438 H273" fill="none"/>
+    <path d="M555 439 H586" fill="none"/>
+  </g>
+
+  <!-- Car wheels -->
+  <g stroke="#4a2085" stroke-width="9">
+    <circle cx="300" cy="475" r="29" fill="#f4f6fa"/>
+    <circle cx="300" cy="475" r="12" fill="#36c9a8" stroke="none"/>
+    <circle cx="536" cy="475" r="29" fill="#f4f6fa"/>
+    <circle cx="536" cy="475" r="12" fill="#36c9a8" stroke="none"/>
+  </g>
+
+  <!-- Truck wheels -->
+  <g stroke="#45167e" stroke-width="11">
+    <circle cx="455" cy="565" r="34" fill="#f8f8fb"/>
+    <circle cx="455" cy="565" r="13" fill="#5d1da2" stroke="none"/>
+    <circle cx="735" cy="565" r="34" fill="#f8f8fb"/>
+    <circle cx="735" cy="565" r="13" fill="#5d1da2" stroke="none"/>
+  </g>
+
+  <!-- Small highlight -->
+  <path d="M276 422 Q284 403 304 397" fill="none" stroke="#8ce5d0" stroke-width="7" opacity=".8"/>
+</svg>
