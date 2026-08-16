@@ -1,25 +1,35 @@
 {
-  "id": "com.autocash.app",
+  "id": "./",
   "name": "Auto Cash - إدارة السيارات والكاش",
   "short_name": "Auto Cash",
+  "description": "نظام محلي متكامل لإدارة حركة السيارات والصندوق المالي",
+  "lang": "ar",
+  "dir": "rtl",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "orientation": "portrait",
+  "categories": ["business", "finance", "productivity"],
   "icons": [
     {
-      "src": "./assets/icons/icon.png",
+      "src": "./assets/icon.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./assets/icons/icon.png",
+      "src": "./assets/icon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "maskable"
+    },
+    {
+      "src": "./assets/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

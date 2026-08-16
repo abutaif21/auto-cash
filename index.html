@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Auto Cash | أوتوكاش</title>
   <link rel="manifest" href="./manifest.json">
-  <link rel="icon" type="image/png" href="./assets/icons/icon.png">
-  <link rel="apple-touch-icon" href="./assets/icons/icon.png">
+  <link rel="icon" type="image/png" href="./assets/icon.png">
+  <link rel="apple-touch-icon" href="./assets/icon.png">
   <link rel="mask-icon" href="./assets/icons/icon.png" color="#10B981">
   
   <meta name="theme-color" content="#0f172a">
@@ -607,37 +607,44 @@
       </div>
 
       <div id="profile-tab-backup-content" style="display: none;">
-        <div style="background: var(--bg-main); padding: 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 14px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <div style="background: var(--bg-main); padding: 14px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 14px;">
+          
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);">
             <span style="font-size: 13px; font-weight: 800; color: var(--text-main);">تفعيل التصدير التلقائي:</span>
             <input type="checkbox" id="profile-auto-backup-toggle" style="width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer;">
           </div>
 
-          <button id="profile-choose-backup-dir-btn" style="width: 100%; background: var(--surface); color: var(--text-main); border: 1px dashed var(--primary); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px;">
+          <button id="profile-choose-backup-dir-btn" type="button" style="width: 100%; background: var(--surface); color: var(--text-main); border: 1px dashed var(--primary); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 6px;">
             <i data-lucide="folder-cog" style="width: 16px; color: var(--primary);"></i> تحديد مجلد الحفظ
           </button>
-          <div id="profile-backup-dir-label" style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px; text-align: center;">لم يتم تحديد مجلد بعد</div>
+          <div id="profile-backup-dir-label" style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px; text-align: center;">لم يتم تحديد مجلد بعد</div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
-            <div>
-              <label style="display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 2px;">مرات التكرار:</label>
-              <select id="profile-backup-frequency" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 11px; background: white; font-weight: 700;">
-                <option value="1">مرة يومياً</option>
-                <option value="2">مرتين يومياً</option>
-                <option value="3">3 مرات يومياً</option>
-              </select>
-            </div>
-            <div>
-              <label style="display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 2px;">وقت النسخ:</label>
-              <input type="time" id="profile-backup-time" value="20:00" style="width: 100%; padding: 7px 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 11px; background: white; font-weight: 700; text-align: center;">
-            </div>
+          <div style="margin-bottom: 12px;">
+            <label for="profile-backup-frequency" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">مرات التكرار اليومي:</label>
+            <select id="profile-backup-frequency" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; background: white; font-weight: 700; color: var(--text-main);">
+              <option value="1">مرة يومياً</option>
+              <option value="2">مرتين يومياً</option>
+              <option value="3">3 مرات يومياً</option>
+            </select>
           </div>
 
-          <button id="profile-save-backup-cfg-btn" style="width: 100%; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">مواعيد النسخ الاحتياطي:</label>
+            <div id="profile-backup-times-container" style="display: flex; flex-direction: column; gap: 6px;">
+              </div>
+          </div>
+
+          <button id="profile-save-backup-cfg-btn" type="button" style="width: 100%; background: var(--primary); color: white; border: none; padding: 11px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer;">
             حفظ إعدادات النسخ
           </button>
+
         </div>
       </div>
+
+
+
+
+
 
       <button id="profile-logout-btn" style="width: 100%; background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger); padding: 10px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 6px;">
         <i data-lucide="log-out" style="width: 16px;"></i> تسجيل الخروج (قفل التطبيق)

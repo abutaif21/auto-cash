@@ -177,8 +177,14 @@ export function showCustomAlert(title, message, type = 'warning') {
 }
 
 // ========================================================
-// 🛡️ 1. موديول النسخ الاحتياطي التلقائي
+// 🛡️ 1. موديول النسخ الاحتياطي التلقائي المعدل (أوقات متعددة)
 // ========================================================
+const DEFAULT_SCHEDULE_TIMES = {
+  1: ['20:00'],
+  2: ['14:00', '22:00'],
+  3: ['08:00', '16:00', '00:00']
+};
+
 class AutoBackupManager {
   static async getDirectoryHandle() {
     try {
@@ -215,7 +221,7 @@ class AutoBackupManager {
 
   static async exportFullDatabase() {
     const exportData = {
-      version: 4,
+      version: 5,
       timestamp: new Date().toISOString(),
       tables: {}
     };
@@ -312,10 +318,12 @@ class AutoBackupManager {
 
     let shouldRun = false;
     const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const scheduleTimes = (config.times && config.times.length > 0) ? config.times : ['20:00'];
 
-    for (const scheduleTime of (config.times || ['20:00'])) {
+    for (const scheduleTime of scheduleTimes) {
       if (currentTimeStr >= scheduleTime) {
-        if (!lastRun || lastRunDateStr !== todayStr || (lastRun && lastRun.getHours() < parseInt(scheduleTime.split(':')[0]))) {
+        const scheduleHour = parseInt(scheduleTime.split(':')[0], 10);
+        if (!lastRun || lastRunDateStr !== todayStr || (lastRun && lastRun.getHours() < scheduleHour)) {
           shouldRun = true;
           break;
         }
@@ -555,11 +563,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // دالة الإقلاع والربط الشامل
 async function bootstrapApplication() {
-  // تسجيل Service Worker
+  // تسجيل Service Worker بالمسار النسبي الدقيق لفحص PWABuilder والتثبيت
   if ('serviceWorker' in navigator) {
     try {
-      const reg = await navigator.serviceWorker.register('./service-worker.js');
+      const reg = await navigator.serviceWorker.register('./service-worker.js', { scope: './' });
       console.log('✅ [PWA] Service Worker مسجل بالنطاق:', reg.scope);
+      
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log('🔄 تم تحديث ملفات التطبيق بنجاح في الخلفية');
+          }
+        });
+      });
     } catch (e) {
       console.log('وضع التشغيل المحلي النشط:', e);
     }
@@ -834,6 +851,35 @@ async function bootstrapApplication() {
   }
 
   // ----------------------------------------------------
+  // دالة توليد حقول إدخال أوقات النسخ ديناميكياً
+  // ----------------------------------------------------
+  function renderBackupTimeInputs(count, existingTimes = []) {
+    const container = document.getElementById('backup-times-wrapper') || document.getElementById('profile-backup-times-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+    const num = parseInt(count, 10) || 1;
+
+    for (let i = 0; i < num; i++) {
+      const fallback = (DEFAULT_SCHEDULE_TIMES[num] && DEFAULT_SCHEDULE_TIMES[num][i]) || '20:00';
+      const timeVal = (existingTimes && existingTimes[i]) ? existingTimes[i] : fallback;
+
+      const row = document.createElement('div');
+      row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 6px;';
+      
+      row.innerHTML = `
+        <span style="font-size: 12px; color: var(--text-secondary);">
+          ⏰ ${num === 1 ? 'وقت النسخ اليومي' : `موعد النسخة ${i + 1}`}
+        </span>
+        <input type="time" class="profile-backup-time-input" data-index="${i}" value="${timeVal}" 
+          style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-primary); font-size: 13px;">
+      `;
+
+      container.appendChild(row);
+    }
+  }
+
+  // ----------------------------------------------------
   // نافذة بيانات المستخدم وإدارة التبويبات (Tabs)
   // ----------------------------------------------------
   const tabSecurityBtn = document.getElementById('tab-security-btn');
@@ -845,15 +891,15 @@ async function bootstrapApplication() {
     tabSecurityBtn.onclick = () => {
       tabSecurityBtn.classList.add('active');
       tabBackupBtn.classList.remove('active');
-      tabSecurityContent.style.display = 'block';
-      tabBackupContent.style.display = 'none';
+      if (tabSecurityContent) tabSecurityContent.style.display = 'block';
+      if (tabBackupContent) tabBackupContent.style.display = 'none';
     };
 
     tabBackupBtn.onclick = () => {
       tabBackupBtn.classList.add('active');
       tabSecurityBtn.classList.remove('active');
-      tabBackupContent.style.display = 'block';
-      tabSecurityContent.style.display = 'none';
+      if (tabBackupContent) tabBackupContent.style.display = 'block';
+      if (tabSecurityContent) tabSecurityContent.style.display = 'none';
     };
   }
 
@@ -880,7 +926,6 @@ async function bootstrapApplication() {
 
       const autoBackupToggle = document.getElementById('profile-auto-backup-toggle');
       const backupFreq = document.getElementById('profile-backup-frequency');
-      const backupTime = document.getElementById('profile-backup-time');
       const dirLabel = document.getElementById('profile-backup-dir-label');
 
       if (autoBackupToggle) {
@@ -892,8 +937,15 @@ async function bootstrapApplication() {
         };
       }
 
-      if (backupFreq) backupFreq.value = backupCfg.frequency || 1;
-      if (backupTime) backupTime.value = (backupCfg.times && backupCfg.times[0]) || '20:00';
+      if (backupFreq) {
+        backupFreq.value = backupCfg.frequency || 1;
+        renderBackupTimeInputs(backupFreq.value, backupCfg.times || ['20:00']);
+
+        backupFreq.onchange = (ev) => {
+          renderBackupTimeInputs(ev.target.value);
+        };
+      }
+
       if (dirLabel) dirLabel.textContent = savedDirName ? `📁 المجلد: ${savedDirName}` : 'لم يتم تحديد مجلد بعد';
 
       // عرض معلومات الترخيص الدائم في البروفايل
@@ -977,18 +1029,24 @@ async function bootstrapApplication() {
     };
   }
 
-  // حفظ إعدادات النسخ الاحتياطي
+  // حفظ إعدادات النسخ الاحتياطي مع تعدد الأوقات
   const saveBackupCfgBtn = document.getElementById('profile-save-backup-cfg-btn');
   if (saveBackupCfgBtn) {
     saveBackupCfgBtn.onclick = async () => {
-      const enabled = document.getElementById('profile-auto-backup-toggle').checked;
-      const frequency = parseInt(document.getElementById('profile-backup-frequency').value);
-      const time = document.getElementById('profile-backup-time').value;
+      const toggle = document.getElementById('profile-auto-backup-toggle');
+      const enabled = toggle ? toggle.checked : false;
+      const freqEl = document.getElementById('profile-backup-frequency');
+      const frequency = freqEl ? parseInt(freqEl.value, 10) : 1;
+
+      // جمع قيم الأوقات من جميع الخانات المتاحة
+      const timeInputs = document.querySelectorAll('.profile-backup-time-input');
+      let times = Array.from(timeInputs).map(inp => inp.value).filter(Boolean);
+      if (times.length === 0) times = ['20:00'];
 
       const currentConfig = await AutoBackupManager.getBackupConfig();
       currentConfig.enabled = enabled;
       currentConfig.frequency = frequency;
-      currentConfig.times = [time];
+      currentConfig.times = times;
 
       await AutoBackupManager.saveBackupConfig(currentConfig);
       showToast('تم حفظ إعدادات النسخ الاحتياطي بنجاح');

@@ -1,5 +1,5 @@
-// تم ترقية الإصدار إلى v5 لتثبيت نظام الترخيص والتفعيل وتحديث الموارد
-const CACHE_NAME = 'autocash-v5-licensed';
+// ترقية إصدار الكاش لفرض التحديث وحذف أي كاش معطوب سابقاً
+const CACHE_NAME = 'autocash-v6-licensed';
 
 // قائمة جميع الموارد الأساسية للعمل Offline بالكامل بدون إنترنت
 const ASSETS_TO_CACHE = [
@@ -8,8 +8,7 @@ const ASSETS_TO_CACHE = [
   './manifest.json',
   
   // الأيقونات والوسائط
-  './assets/icons/icon.png',
-  './assets/icons/icon.svg',
+  './assets/icon.png',
   
   // ملفات التنسيق CSS
   './css/base.css',
@@ -46,15 +45,17 @@ const ASSETS_TO_CACHE = [
   './js/views/reports-view.js'
 ];
 
-// مرحلة التثبيت: حفظ الملفات محلياً في الكاش
+// مرحلة التثبيت: حفظ الملفات محلياً في الكاش مع معالجة الأخطاء لكل ملف
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      await Promise.all(
-        ASSETS_TO_CACHE.map((asset) => {
-          return cache.add(asset).catch((err) => {
+      await Promise.allSettled(
+        ASSETS_TO_CACHE.map(async (asset) => {
+          try {
+            await cache.add(asset);
+          } catch (err) {
             console.warn(`[Service Worker] تعذر تخزين الملف: ${asset}`, err);
-          });
+          }
         })
       );
     })
@@ -62,40 +63,46 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// مرحلة التفعيل: تنظيف وحذف الإصدارات القديمة من الكاش
+// مرحلة التفعيل: تنظيف وحذف كافة الإصدارات القديمة من الكاش
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// اعتراض الطلبات وتوفير الملفات من الكاش أثناء العمل Offline
+// استراتيجية جلب البيانات: Cache First مع التحديث في الخلفية والعمل Offline
 self.addEventListener('fetch', (event) => {
   if (!event.request.url.startsWith('http')) return;
+
+  // استبعاد طلبات POST و PUT والتركيز على GET
+  if (event.request.method !== 'GET') return;
 
   event.respondWith(
     caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
-      return fetch(event.request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return networkResponse;
-      }).catch(() => {
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
-      });
+
+      return fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // إذا انقطع الاتصال وكان الطلب عبارة عن تنقل بين الصفحات
+          if (event.request.mode === 'navigate') {
+            return caches.match('./index.html');
+          }
+        });
     })
   );
 });
